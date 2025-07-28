@@ -35,19 +35,18 @@ class LogAchatRepository
             
             $stmt = $this->connection->prepare($sql);
             
-            // Gérer la date : utiliser l'actuelle si pas définie
             $dateHeure = $log->getDateHeure() ? 
                 $log->getDateHeure()->format('Y-m-d H:i:s') : 
                 date('Y-m-d H:i:s');
             
-            error_log("📅 Date/heure: " . $dateHeure);
-            error_log("🏢 Localisation: " . $log->getLocalisation());
-            error_log("🌐 IP: " . $log->getAdresseIp());
-            error_log("📊 Statut: " . $log->getStatut());
-            error_log("🔢 Compteur: " . $log->getNumeroCompteur());
-            error_log("🎫 Code recharge: " . ($log->getCodeRecharge() ?? 'null'));
-            error_log("⚡ kWh: " . ($log->getNbreKwt() ?? 'null'));
-            error_log("❌ Message erreur: " . ($log->getMessageErreur() ?? 'null'));
+            error_log(" Date/heure: " . $dateHeure);
+            error_log(" Localisation: " . $log->getLocalisation());
+            error_log(" IP: " . $log->getAdresseIp());
+            error_log(" Statut: " . $log->getStatut());
+            error_log(" Compteur: " . $log->getNumeroCompteur());
+            error_log(" Code recharge: " . ($log->getCodeRecharge() ?? 'null'));
+            error_log(" kWh: " . ($log->getNbreKwt() ?? 'null'));
+            error_log(" Message erreur: " . ($log->getMessageErreur() ?? 'null'));
             
             $stmt->bindValue(':date_heure', $dateHeure);
             $stmt->bindValue(':localisation', $log->getLocalisation());
@@ -55,7 +54,6 @@ class LogAchatRepository
             $stmt->bindValue(':statut', $log->getStatut());
             $stmt->bindValue(':numero_compteur', $log->getNumeroCompteur());
             
-            // Gérer les valeurs nulles
             $stmt->bindValue(':code_recharge', $log->getCodeRecharge(), 
                 $log->getCodeRecharge() === null ? \PDO::PARAM_NULL : \PDO::PARAM_STR);
             $stmt->bindValue(':nbre_kwt', $log->getNbreKwt(), 
@@ -71,7 +69,6 @@ class LogAchatRepository
             
             $log->setId($id);
             
-            // Si pas de date définie, la définir maintenant
             if (!$log->getDateHeure()) {
                 $log->setDateHeure(new \DateTime());
             }

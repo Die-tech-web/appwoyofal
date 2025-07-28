@@ -32,11 +32,10 @@ class WoyofalService
         $log = new LogAchat();
         $log->setNumeroCompteur($numero_compteur)
             ->setLocalisation('Dakar, Sénégal')
-            ->setAdresseIp($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1') // Ajouter l'IP
+            ->setAdresseIp($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1') 
             ->setStatut('Échec');
             
         try {
-            // 1. Vérifier l'existence du compteur
             $compteur = $this->compteurRepository->findByNumero($numero_compteur);
 
             if (!$compteur || !$compteur->isActif()) {
@@ -51,7 +50,6 @@ class WoyofalService
                 ];
             }
             
-            // 2. Récupérer les informations du client
             $client = $this->clientRepository->findById($compteur->getClientId());
             if (!$client) {
                 $log->setMessageErreur('Client associé au compteur introuvable');
@@ -65,7 +63,6 @@ class WoyofalService
                 ];
             }
             
-            // 3. Valider le montant minimum
             if ($montant < 100) {
                 $log->setMessageErreur('Montant minimum requis: 100 FCFA');
                 $this->logRepository->save($log);
@@ -78,10 +75,8 @@ class WoyofalService
                 ];
             }
             
-            // 4. Calculer les kWh selon les tranches
             $calculResult = $this->calculerKilowatts($montant);
             
-            // 5. Générer l'achat
             $achat = new Achat();
             $achat->setReference($this->genererReference())
                   ->setCodeRecharge($this->genererCodeRecharge())
@@ -92,17 +87,14 @@ class WoyofalService
                   ->setPrixKw($calculResult['prix_moyen'])
                   ->setClientNom($client->getNomComplet());
             
-            // 6. Sauvegarder l'achat
             $this->achatRepository->save($achat);
             
-            // 7. Logger le succès
             $log->setStatut('Success')
                 ->setCodeRecharge($achat->getCodeRecharge())
                 ->setNbreKwt($achat->getNbreKwt())
                 ->setMessageErreur(null);
             $this->logRepository->save($log);
             
-            // 8. Retourner la réponse
             return [
                 'data' => [
                     'compteur' => $achat->getNumeroCompteur(),
@@ -122,7 +114,6 @@ class WoyofalService
         } catch (\Exception $e) {
             $log->setMessageErreur($e->getMessage());
             
-            // Essayer de sauvegarder le log, mais ne pas faire échouer si ça ne marche pas
             try {
                 $this->logRepository->save($log);
             } catch (\Exception $logError) {
@@ -141,7 +132,6 @@ class WoyofalService
     public function verifierCompteur(string $numero_compteur): array
     {
         try {
-            // SUPPRIMER CETTE LIGNE !
             // var_dump('ok');die();
 
             $compteur = $this->compteurRepository->findByNumero($numero_compteur);
@@ -179,11 +169,9 @@ class WoyofalService
         }
     }
     
-    // ... reste du code identique (calculerKilowatts, genererReference, etc.)
     
     private function calculerKilowatts(float $montant): array
     {
-        // Tranches de prix par kWh (en FCFA) - Identique à votre code original
         $tranches = [
             ['nom' => 'Tranche 1', 'min' => 0, 'max' => 5000, 'prix' => 98],
             ['nom' => 'Tranche 2', 'min' => 5001, 'max' => 15000, 'prix' => 105],
@@ -240,33 +228,27 @@ class WoyofalService
         $date = date('Ymd');
         
         try {
-            // Version simplifiée : générer un numéro aléatoire unique
             $sequence = rand(1000, 9999);
             $reference = "WOY-{$date}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
             
-            // Vérifier l'unicité si la méthode existe
             $maxTentatives = 10;
             $tentative = 0;
             
             while ($tentative < $maxTentatives) {
                 try {
-                    // Essayer de vérifier l'unicité si possible
                     if (method_exists($this->achatRepository, 'findByReference')) {
                         $existe = $this->achatRepository->findByReference($reference);
                         if (!$existe) {
                             break; // Référence unique trouvée
                         }
                     } else {
-                        // Si pas de méthode de vérification, accepter la référence
                         break;
                     }
                     
-                    // Générer une nouvelle référence
                     $sequence = rand(1000, 9999);
                     $reference = "WOY-{$date}-" . str_pad($sequence, 4, '0', STR_PAD_LEFT);
                     $tentative++;
                 } catch (\Exception $e) {
-                    // En cas d'erreur, continuer avec la référence actuelle
                     break;
                 }
             }
@@ -274,7 +256,6 @@ class WoyofalService
             return $reference;
             
         } catch (\Exception $e) {
-            // En cas d'erreur, utiliser un numéro aléatoire avec timestamp
             $timestamp = time();
             return "WOY-{$date}-" . substr($timestamp, -4);
         }
@@ -294,23 +275,19 @@ class WoyofalService
             $tentative++;
             
             try {
-                // Vérifier l'unicité si la méthode existe
                 if (method_exists($this->achatRepository, 'existsByCodeRecharge')) {
                     $existe = $this->achatRepository->existsByCodeRecharge($codeRecharge);
                 } elseif (method_exists($this->achatRepository, 'findByCodeRecharge')) {
                     $existe = $this->achatRepository->findByCodeRecharge($codeRecharge) !== null;
                 } else {
-                    // Si aucune méthode de vérification, accepter le code
                     $existe = false;
                 }
             } catch (\Exception $e) {
-                // Si erreur de vérification, accepter le code
                 $existe = false;
             }
             
         } while ($existe && $tentative < $maxTentatives);
         
-        // Si trop de tentatives, ajouter un timestamp pour garantir l'unicité
         if ($tentative >= $maxTentatives) {
             $codeRecharge .= '-' . substr(time(), -4);
         }

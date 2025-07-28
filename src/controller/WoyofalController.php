@@ -18,15 +18,13 @@ class WoyofalController
         try {
             error_log("========= DEBUT FONCTION ACHETER =========");
             
-            // 1. Debug complet de TOUT ce qui arrive
-            error_log("Method: " . $_SERVER['REQUEST_METHOD']);
+            error_log(message: "Method: " . $_SERVER['REQUEST_METHOD']);
             error_log("Content-Type: " . ($_SERVER['CONTENT_TYPE'] ?? 'non défini'));
             error_log("Query String: " . ($_SERVER['QUERY_STRING'] ?? 'vide'));
             error_log("Request URI: " . ($_SERVER['REQUEST_URI'] ?? 'non défini'));
             error_log("GET params: " . json_encode($_GET));
             error_log("POST params: " . json_encode($_POST));
             
-            // 2. Debug complet du raw input
             $rawInput = file_get_contents('php://input');
             error_log("Raw input length: " . strlen($rawInput));
             error_log("Raw input content: '" . $rawInput . "'");
@@ -34,34 +32,29 @@ class WoyofalController
             
             $input = null;
             
-            // 3. Essayer de récupérer les données de partout
-            
-            // A. Données GET en priorité (pour les tests simples)
+          
             if (!empty($_GET)) {
                 $input = $_GET;
-                error_log("✅ Utilisation des données GET: " . json_encode($input));
+                error_log(" Utilisation des données GET: " . json_encode($input));
             }
             
-            // B. Données POST (form-data)
             elseif (!empty($_POST)) {
                 $input = $_POST;
-                error_log("✅ Utilisation des données POST: " . json_encode($input));
+                error_log(" Utilisation des données POST: " . json_encode($input));
             }
             
-            // C. Données JSON dans le body
             elseif (!empty($rawInput)) {
                 $jsonInput = json_decode($rawInput, true);
                 if ($jsonInput !== null && json_last_error() === JSON_ERROR_NONE) {
                     $input = $jsonInput;
-                    error_log("✅ Utilisation des données JSON: " . json_encode($input));
+                    error_log(" Utilisation des données JSON: " . json_encode($input));
                 } else {
-                    error_log("❌ Erreur JSON: " . json_last_error_msg());
-                    // Essayer comme query string
+                    error_log(" Erreur JSON: " . json_last_error_msg());
                     if (strpos($rawInput, '=') !== false) {
                         parse_str($rawInput, $parsedInput);
                         if (!empty($parsedInput)) {
                             $input = $parsedInput;
-                            error_log("✅ Utilisation query string: " . json_encode($input));
+                            error_log("Utilisation query string: " . json_encode($input));
                         }
                     }
                 }
@@ -74,7 +67,7 @@ class WoyofalController
             
             // 5. Si vraiment aucune donnée
             if (!$input || empty($input)) {
-                error_log("❌ AUCUNE DONNÉE FINALE");
+                error_log("AUCUNE DONNÉE FINALE");
                 
                 // Réponse de debug complète
                 $debugInfo = [
@@ -96,33 +89,30 @@ class WoyofalController
             
             // 4. Valider les champs requis
             if (!isset($input['numero_compteur']) || empty($input['numero_compteur'])) {
-                error_log("❌ numero_compteur manquant dans: " . json_encode($input));
+                error_log(" numero_compteur manquant dans: " . json_encode($input));
                 $this->sendErrorResponse('Le numéro de compteur est requis', 400);
                 return;
             }
             
             if (!isset($input['montant']) || !is_numeric($input['montant'])) {
-                error_log("❌ montant invalide: " . ($input['montant'] ?? 'non défini'));
+                error_log("montant invalide: " . ($input['montant'] ?? 'non défini'));
                 $this->sendErrorResponse('Le montant est requis et doit être numérique', 400);
                 return;
             }
             
-            // 5. Nettoyer les données
             $numero_compteur = trim($input['numero_compteur']);
             $montant = (float) $input['montant'];
 
-            error_log("✅ Données validées - Compteur: $numero_compteur, Montant: $montant");
+            error_log(" Données validées - Compteur: $numero_compteur, Montant: $montant");
 
-            // 6. Effectuer l'achat via le service
             error_log("Appel du service effectuerAchat...");
             $result = $this->woyofalService->effectuerAchat($numero_compteur, $montant);
             error_log("Résultat du service: " . json_encode($result));
             
-            // 7. Retourner la réponse
             $this->sendResponse($result);
             
         } catch (\Exception $e) {
-            error_log("❌ Erreur dans acheter(): " . $e->getMessage());
+            error_log("Erreur dans acheter(): " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
             $this->sendErrorResponse('Erreur lors de l\'achat: ' . $e->getMessage(), 500);
         }
@@ -131,7 +121,6 @@ class WoyofalController
     public function verifierCompteur(string $numero): void
     {
         try {
-            // Nettoyer le numéro
             $numero = trim($numero);
             
             if (empty($numero)) {
@@ -150,7 +139,6 @@ class WoyofalController
     
     private function sendResponse(array $data): void
     {
-        // Définir les headers appropriés
         header('Content-Type: application/json; charset=utf-8');
         http_response_code($data['code']);
         

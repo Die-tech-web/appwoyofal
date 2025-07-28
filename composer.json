@@ -47,5 +47,9 @@
     "lightweight",
     "bootstrap",
     "starter"
-  ]
+  ],
+    "scripts": {
+    "database:migrate": "php migration/migration.php",
+    "database:seeder": "php seeders/seeder.php"
+  }
 }
