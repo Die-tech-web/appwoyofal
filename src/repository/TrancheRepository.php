@@ -31,7 +31,7 @@ class TrancheRepository
         while ($data = $stmt->fetch()) {
             $tranches[] = $this->hydrate($data);
         }
-        
+         
         return $tranches;
     }
     
