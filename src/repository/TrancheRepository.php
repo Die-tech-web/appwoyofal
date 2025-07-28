@@ -12,12 +12,12 @@ class TrancheRepository
     
     public function __construct()
     {
-        $this->connection = Database::getInstance(
+       $this->connection = Database::getInstance(
             'pgsql',
-            'db',
+            'aws-0-eu-west-3.pooler.supabase.com ',
             5432,
-            'appwoyofal',
             'postgres',
+            'postgres.wyrxigcqkyrxiexzjuyq',
             'madie'
         )->getConnexion();
     }

@@ -4,17 +4,15 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Dotenv\Dotenv;
 
-// Chargement des variables d'environnement
 $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
 $dotenv->load();
 
-// Configuration de la base de données depuis le .env
 $driver = $_ENV['DB_CONNECTION'] ?? 'pgsql';
-$host = $_ENV['DB_HOST'] ?? 'db';
+$host = $_ENV['DB_HOST'] ?? 'aws-0-eu-west-3.pooler.supabase.com';
 $port = $_ENV['DB_PORT'] ?? '5432';
-$dbName = $_ENV['DB_DATABASE'] ?? 'appwoyofal';
-$user = $_ENV['DB_USERNAME'] ?? 'postgres';
-$password = $_ENV['DB_PASSWORD'] ?? '';
+$dbName = $_ENV['DB_DATABASE'] ?? 'postgres';
+$user = $_ENV['DB_USERNAME'] ?? 'postgres.wyrxigcqkyrxiexzjuyq';
+$password = $_ENV['DB_PASSWORD'] ?? 'madie';
 
 if (empty($dbName) || empty($user)) {
     die("❌ Les variables de base de données ne sont pas correctement définies dans .env\n");
